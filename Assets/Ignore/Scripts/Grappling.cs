@@ -51,7 +51,7 @@ public class Grappling : MonoBehaviour
         if (grapplingCdTimer > 0) return;
 
         // deactivate active swinging
-        //GetComponent<SwingingDone>().StopSwing();
+        GetComponent<SwingingDone>().StopSwing();
 
         grappling = true;
 
