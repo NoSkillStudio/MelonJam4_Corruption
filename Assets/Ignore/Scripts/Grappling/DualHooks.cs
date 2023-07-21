@@ -5,8 +5,8 @@ using UnityEngine;
 public class DualHooks : MonoBehaviour
 {
     [Header("References")]
-    public List<LineRenderer> lineRenderers;
-    public List<Transform> gunTips;
+    public LineRenderer lineRenderer;
+    public Transform gunTip;
     public Transform cam;
     public Transform player;
     public LayerMask whatIsGrappleable;
@@ -15,7 +15,7 @@ public class DualHooks : MonoBehaviour
     [Header("Swinging")]
     private float maxSwingDistance = 25f;
     private List<Vector3> swingPoints;
-    private List<SpringJoint> joints;
+    private SpringJoint joints;
 
     [Header("Grappling")]
     public float maxGrappleDistance;
@@ -60,7 +60,7 @@ public class DualHooks : MonoBehaviour
         predictionHits = new List<RaycastHit>();
 
         swingPoints = new List<Vector3>();
-        joints = new List<SpringJoint>();
+       
 
         swingsActive = new List<bool>();
         grapplesActive = new List<bool>();
@@ -70,7 +70,7 @@ public class DualHooks : MonoBehaviour
         for (int i = 0; i < amountOfSwingPoints; i++)
         {
             predictionHits.Add(new RaycastHit());
-            joints.Add(null);
+            
             swingPoints.Add(Vector3.zero);
             swingsActive.Add(false);
             grapplesActive.Add(false);
@@ -83,7 +83,7 @@ public class DualHooks : MonoBehaviour
         MyInput();
         CheckForSwingPoints();
 
-        if (joints[0] != null || joints[1] != null) OdmGearMovement();
+        if (joints != null) OdmGearMovement();
 
         if (grapplingCdTimer > 0)
             grapplingCdTimer -= Time.deltaTime;
@@ -176,23 +176,23 @@ public class DualHooks : MonoBehaviour
         swingsActive[swingIndex] = true;
 
         swingPoints[swingIndex] = predictionHits[swingIndex].point;
-        joints[swingIndex] = player.gameObject.AddComponent<SpringJoint>();
-        joints[swingIndex].autoConfigureConnectedAnchor = false;
-        joints[swingIndex].connectedAnchor = swingPoints[swingIndex];
+        joints = player.gameObject.AddComponent<SpringJoint>();
+        joints.autoConfigureConnectedAnchor = false;
+        joints.connectedAnchor = swingPoints[swingIndex];
 
         float distanceFromPoint = Vector3.Distance(player.position, swingPoints[swingIndex]);
 
         // the distance grapple will try to keep from grapple point. 
-        joints[swingIndex].maxDistance = distanceFromPoint * 0.8f;
-        joints[swingIndex].minDistance = distanceFromPoint * 0.25f;
+        joints.maxDistance = distanceFromPoint * 0.8f;
+        joints.minDistance = distanceFromPoint * 0.25f;
 
         // customize values as you like
-        joints[swingIndex].spring = 15f;
-        joints[swingIndex].damper = 7f;
-        joints[swingIndex].massScale = 4.5f;
+        joints.spring = 15f;
+        joints.damper = 7f;
+        joints.massScale = 4.5f;
 
-        lineRenderers[swingIndex].positionCount = 2;
-        currentGrapplePositions[swingIndex] = gunTips[swingIndex].position;
+        lineRenderer.positionCount = 2;
+        currentGrapplePositions[swingIndex] = gunTip.position;
     }
 
     public void StopSwing(int swingIndex)
@@ -201,7 +201,7 @@ public class DualHooks : MonoBehaviour
 
         swingsActive[swingIndex] = false;
 
-        Destroy(joints[swingIndex]);
+        Destroy(joints);
     }
 
     #endregion
@@ -235,8 +235,8 @@ public class DualHooks : MonoBehaviour
             StartCoroutine(StopGrapple(grappleIndex, grappleDelayTime));
         }
 
-        lineRenderers[grappleIndex].positionCount = 2;
-        currentGrapplePositions[grappleIndex] = gunTips[grappleIndex].position;
+        lineRenderer.positionCount = 2;
+        currentGrapplePositions[grappleIndex] = gunTip.position;
     }
 
     private void DelayedFreeze()
@@ -309,7 +309,7 @@ public class DualHooks : MonoBehaviour
             // the distance grapple will try to keep from grapple point.
             UpdateJoints(distanceFromPoint);
 
-            print("shorten " + Time.time);
+            //print("shorten " + Time.time);
         }
         // extend cable
         if (Input.GetKey(KeyCode.S))
@@ -326,14 +326,11 @@ public class DualHooks : MonoBehaviour
 
     private void UpdateJoints(float distanceFromPoint)
     {
-        for (int i = 0; i < joints.Count; i++)
-        {
-            if (joints[i] != null)
-            {
-                joints[i].maxDistance = distanceFromPoint * 0.8f;
-                joints[i].minDistance = distanceFromPoint * 0.25f;
-            }
-        }
+   
+                joints.maxDistance = distanceFromPoint * 0.8f;
+                joints.minDistance = distanceFromPoint * 0.25f;
+            
+        
     }
 
     #endregion
@@ -371,14 +368,14 @@ public class DualHooks : MonoBehaviour
             // if not grappling, don't draw rope
             if (!grapplesActive[i] && !swingsActive[i]) 
             {
-                lineRenderers[i].positionCount = 0;
+                lineRenderer.positionCount = 0;
             }
             else
             {
                 currentGrapplePositions[i] = Vector3.Lerp(currentGrapplePositions[i], swingPoints[i], Time.deltaTime * 8f);
 
-                lineRenderers[i].SetPosition(0, gunTips[i].position);
-                lineRenderers[i].SetPosition(1, currentGrapplePositions[i]);
+                lineRenderer.SetPosition(0, gunTip.position);
+                lineRenderer.SetPosition(1, currentGrapplePositions[i]);
             }
         }
     }
