@@ -66029,16 +66029,11 @@ MonoBehaviour:
   horizontalThrustForce: 2000
   forwardThrustForce: 4000
   extendCableSpeed: 20
-  predictionPoints:
-  - {fileID: 891526160}
-  - {fileID: 490155190}
+  predictionPoints: {fileID: 891526160}
   predictionSphereCastRadius: 3
   swingKey1: 323
-  swingKey2: 324
   amountOfSwingPoints: 1
-  pointAimers:
-  - {fileID: 1896875239}
-  - {fileID: 740104388}
+  pointAimers: {fileID: 740104388}
 --- !u!120 &1623225834
 LineRenderer:
   serializedVersion: 2
