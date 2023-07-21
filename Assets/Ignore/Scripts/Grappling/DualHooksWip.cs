@@ -199,7 +199,7 @@ public class DualHooksWip : MonoBehaviour
 
         swingsActive[swingIndex] = false;
 
-        //lineRenderers[swingIndex].positionCount = 0;
+        //lineRenderer[swingIndex].positionCount = 0;
 
         Destroy(joints[swingIndex]);
     }
