@@ -65887,6 +65887,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1623225822}
   - component: {fileID: 1623225823}
+  - component: {fileID: 1623225836}
   - component: {fileID: 1623225832}
   - component: {fileID: 1623225835}
   - component: {fileID: 1623225833}
@@ -66163,6 +66164,19 @@ MonoBehaviour:
   maxMovementSpeed: 0
   minFov: 0
   maxFov: 0
+--- !u!114 &1623225836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1623225821}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1dbf2e0c3841b4e41943da404049c21d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 1
 --- !u!43 &1627895500
 Mesh:
   m_ObjectHideFlags: 0
