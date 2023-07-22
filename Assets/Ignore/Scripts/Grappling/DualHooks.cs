@@ -16,13 +16,15 @@ public class DualHooks : MonoBehaviour
     private float maxSwingDistance = 25f;
     private List<Vector3> swingPoints;
     private List<SpringJoint> joints;
+    private Vector3 swingPoint;
+    private SpringJoint joint;
 
     [Header("Grappling")]
     public float maxGrappleDistance;
     public float grappleDelayTime;
     public float overshootYAxis;
 
-    private List<bool> grapplesActive;
+    private bool grapplesActive;
 
     [Header("Cooldown")]
     public float grapplingCd;
@@ -36,19 +38,18 @@ public class DualHooks : MonoBehaviour
     public float extendCableSpeed;
 
     [Header("Prediction")]
-    public List<RaycastHit> predictionHits;
-    public List<Transform> predictionPoints;
+    public RaycastHit predictionHits;
+    public Transform predictionPoints;
     public float predictionSphereCastRadius;
 
     [Header("Input")]
     public KeyCode swingKey1 = KeyCode.Mouse0;
-    public KeyCode swingKey2 = KeyCode.Mouse1;
 
 
     [Header("DualSwinging")]
     public int amountOfSwingPoints = 2;
-    public List<Transform> pointAimers;
-    private List<bool> swingsActive;
+    public Transform pointAimers;
+    private bool swingsActive;
 
     private void Start()
     {
@@ -57,9 +58,6 @@ public class DualHooks : MonoBehaviour
 
     private void ListSetup()
     {
-        predictionHits = new List<RaycastHit>();
-
-        swingPoints = new List<Vector3>();
         joints = new List<SpringJoint>();
 
         swingsActive = new List<bool>();
@@ -84,6 +82,7 @@ public class DualHooks : MonoBehaviour
         CheckForSwingPoints();
 
         if (joints[0] != null || joints[1] != null) OdmGearMovement();
+        if (joint != null) OdmGearMovement();
 
         if (grapplingCdTimer > 0)
             grapplingCdTimer -= Time.deltaTime;
@@ -99,31 +98,30 @@ public class DualHooks : MonoBehaviour
         // starting swings or grapples depends on whether or not shift is pressed
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            if (Input.GetKeyDown(swingKey1)) StartGrapple(0);
-            if (Input.GetKeyDown(swingKey2)) StartGrapple(1);
+            if (Input.GetKeyDown(swingKey1)) StartGrapple();
+            
         }
         else
         {
-            if (Input.GetKeyDown(swingKey1)) StartSwing(0);
-            if (Input.GetKeyDown(swingKey2)) StartSwing(1);
+            if (Input.GetKeyDown(swingKey1)) StartSwing();
+            
         }
 
         // stopping is always possible
         //if (Input.GetKeyUp(swingKey1)) StopGrapple(0);
         //if (Input.GetKeyUp(swingKey2)) StopGrapple(1);
-        if (Input.GetKeyUp(swingKey1)) StopSwing(0);
-        if (Input.GetKeyUp(swingKey2)) StopSwing(1);
+        if (Input.GetKeyUp(swingKey1)) StopSwing();
     }
 
     private void CheckForSwingPoints()
     {
         for (int i = 0; i < amountOfSwingPoints; i++)
         {
-            if (swingsActive[i]) { /* Do Nothing */ }
+            if (swingsActive) { /* Do Nothing */ }
             else
             {
                 RaycastHit sphereCastHit;
-                Physics.SphereCast(pointAimers[i].position, predictionSphereCastRadius, pointAimers[i].forward, 
+                Physics.SphereCast(pointAimers.position, predictionSphereCastRadius, pointAimers.forward, 
                                     out sphereCastHit, maxSwingDistance, whatIsGrappleable);
 
                 RaycastHit raycastHit;
@@ -147,96 +145,110 @@ public class DualHooks : MonoBehaviour
                 // realHitPoint found
                 if (realHitPoint != Vector3.zero)
                 {
-                    predictionPoints[i].gameObject.SetActive(true);
-                    predictionPoints[i].position = realHitPoint;
+                    predictionPoints.gameObject.SetActive(true);
+                    predictionPoints.position = realHitPoint;
                 }
                 // realHitPoint not found
                 else
                 {
-                    predictionPoints[i].gameObject.SetActive(false);
+                    predictionPoints.gameObject.SetActive(false);
                 }
 
-                predictionHits[i] = raycastHit.point == Vector3.zero ? sphereCastHit : raycastHit;
+                predictionHits = raycastHit.point == Vector3.zero ? sphereCastHit : raycastHit;
             }
         }
     }
 
     #region Swinging
 
-    private void StartSwing(int swingIndex)
+    private void StartSwing()
     {
         // return if predictionHit not found
-        if (predictionHits[swingIndex].point == Vector3.zero) return;
+        if (predictionHits.point == Vector3.zero) return;
 
         // deactivate active grapple
         CancelActiveGrapples();
         pm.ResetRestrictions();
 
         pm.swinging = true;
-        swingsActive[swingIndex] = true;
+        swingsActive = true;
 
         swingPoints[swingIndex] = predictionHits[swingIndex].point;
         joints[swingIndex] = player.gameObject.AddComponent<SpringJoint>();
         joints[swingIndex].autoConfigureConnectedAnchor = false;
         joints[swingIndex].connectedAnchor = swingPoints[swingIndex];
+        swingPoint = predictionHits.point;
+        joint = player.gameObject.AddComponent<SpringJoint>();
+        joint.autoConfigureConnectedAnchor = false;
+        joint.connectedAnchor = swingPoint;
 
-        float distanceFromPoint = Vector3.Distance(player.position, swingPoints[swingIndex]);
+        float distanceFromPoint = Vector3.Distance(player.position, swingPoint);
 
         // the distance grapple will try to keep from grapple point. 
         joints[swingIndex].maxDistance = distanceFromPoint * 0.8f;
         joints[swingIndex].minDistance = distanceFromPoint * 0.25f;
+        joint.maxDistance = distanceFromPoint * 0.8f;
+        joint.minDistance = distanceFromPoint * 0.25f;
 
         // customize values as you like
         joints[swingIndex].spring = 15f;
         joints[swingIndex].damper = 7f;
         joints[swingIndex].massScale = 4.5f;
+        joint.spring = 15f;
+        joint.damper = 7f;
+        joint.massScale = 4.5f;
 
         lineRenderers[swingIndex].positionCount = 2;
         currentGrapplePositions[swingIndex] = gunTips[swingIndex].position;
+        lineRenderer.positionCount = 2;
+        currentGrapplePositions = gunTip.position;
     }
 
-    public void StopSwing(int swingIndex)
+    public void StopSwing()
     {
         pm.swinging = false;
 
-        swingsActive[swingIndex] = false;
+        swingsActive = false;
 
         Destroy(joints[swingIndex]);
+        Destroy(joint);
     }
 
     #endregion
 
     #region Grappling
 
-    private void StartGrapple(int grappleIndex)
+    private void StartGrapple()
     {
         if (grapplingCdTimer > 0) return;
 
         CancelActiveSwings();
-        CancelAllGrapplesExcept(grappleIndex);
+        CancelAllGrapplesExcept();
 
         // Case 1 - target point found
-        if (predictionHits[grappleIndex].point != Vector3.zero)
+        if (predictionHits.point != Vector3.zero)
         {
             Invoke(nameof(DelayedFreeze), 0.05f);
 
-            grapplesActive[grappleIndex] = true;
+            grapplesActive = true;
 
-            swingPoints[grappleIndex] = predictionHits[grappleIndex].point;
+            swingPoint = predictionHits.point;
 
-            StartCoroutine(ExecuteGrapple(grappleIndex));
+            StartCoroutine(ExecuteGrapple());
         }
 
         // Case 2 - target point not found
         else
         {
-            swingPoints[grappleIndex] = cam.position + cam.forward * maxGrappleDistance;
+            swingPoint = cam.position + cam.forward * maxGrappleDistance;
 
-            StartCoroutine(StopGrapple(grappleIndex, grappleDelayTime));
+            StartCoroutine(StopGrapple(grappleDelayTime));
         }
 
         lineRenderers[grappleIndex].positionCount = 2;
         currentGrapplePositions[grappleIndex] = gunTips[grappleIndex].position;
+        lineRenderer.positionCount = 2;
+        currentGrapplePositions = gunTip.position;
     }
 
     private void DelayedFreeze()
@@ -244,7 +256,7 @@ public class DualHooks : MonoBehaviour
         pm.freeze = true;
     }
 
-    private IEnumerator ExecuteGrapple(int grappleIndex)
+    private IEnumerator ExecuteGrapple()
     {
         yield return new WaitForSeconds(grappleDelayTime);
 
@@ -252,15 +264,15 @@ public class DualHooks : MonoBehaviour
 
         Vector3 lowestPoint = new Vector3(transform.position.x, transform.position.y - 1f, transform.position.z);
 
-        float grapplePointRelativeYPos = swingPoints[grappleIndex].y - lowestPoint.y;
+        float grapplePointRelativeYPos = swingPoint.y - lowestPoint.y;
         float highestPointOnArc = grapplePointRelativeYPos + overshootYAxis;
 
         if (grapplePointRelativeYPos < 0) highestPointOnArc = overshootYAxis;
 
-        pm.JumpToPosition(swingPoints[grappleIndex], highestPointOnArc);
+        pm.JumpToPosition(swingPoint, highestPointOnArc);
     }
 
-    public IEnumerator StopGrapple(int grappleIndex, float delay = 0f)
+    public IEnumerator StopGrapple(float delay = 0f)
     {
         yield return new WaitForSeconds(delay);
 
@@ -268,7 +280,7 @@ public class DualHooks : MonoBehaviour
 
         pm.ResetRestrictions();
 
-        grapplesActive[grappleIndex] = false;
+        grapplesActive = false;
 
         grapplingCdTimer = grapplingCd;
     }
@@ -280,13 +292,13 @@ public class DualHooks : MonoBehaviour
     private Vector3 pullPoint;
     private void OdmGearMovement()
     {
-        if (swingsActive[0] && !swingsActive[1]) pullPoint = swingPoints[0];
-        if (swingsActive[1] && !swingsActive[0]) pullPoint = swingPoints[1];
+        
+        
         // get midpoint if both swing points are active
-        if (swingsActive[0] && swingsActive[1])
+        if (swingsActive)
         {
-            Vector3 dirToGrapplePoint1 = swingPoints[1] - swingPoints[0];
-            pullPoint = swingPoints[0] + dirToGrapplePoint1 * 0.5f;
+            Vector3 dirToGrapplePoint1 = swingPoint - swingPoint;
+            pullPoint = swingPoint + dirToGrapplePoint1 * 0.5f;
         }
 
         // right
@@ -334,6 +346,11 @@ public class DualHooks : MonoBehaviour
                 joints[i].minDistance = distanceFromPoint * 0.25f;
             }
         }
+   
+                joint.maxDistance = distanceFromPoint * 0.8f;
+                joint.minDistance = distanceFromPoint * 0.25f;
+            
+        
     }
 
     #endregion
@@ -346,39 +363,39 @@ public class DualHooks : MonoBehaviour
         StartCoroutine(StopGrapple(1));
     }
 
-    private void CancelAllGrapplesExcept(int grappleIndex)
-    {
-        for (int i = 0; i < amountOfSwingPoints; i++)
-            if (i != grappleIndex) StartCoroutine(StopGrapple(i));
+    private void CancelAllGrapplesExcept()
+    {      
+             StartCoroutine(StopGrapple());
     }
 
     private void CancelActiveSwings()
     {
-        StopSwing(0);
-        StopSwing(1);
+        StopSwing();
     }
 
     #endregion
 
     #region Visualisation
 
-    private List<Vector3> currentGrapplePositions;
+    private Vector3 currentGrapplePositions;
 
     private void DrawRope()
     {
         for (int i = 0; i < amountOfSwingPoints; i++)
         {
             // if not grappling, don't draw rope
-            if (!grapplesActive[i] && !swingsActive[i]) 
+            if (!grapplesActive && !swingsActive) 
             {
                 lineRenderers[i].positionCount = 0;
             }
             else
             {
-                currentGrapplePositions[i] = Vector3.Lerp(currentGrapplePositions[i], swingPoints[i], Time.deltaTime * 8f);
+                currentGrapplePositions = Vector3.Lerp(currentGrapplePositions, swingPoint, Time.deltaTime * 8f);
 
                 lineRenderers[i].SetPosition(0, gunTips[i].position);
                 lineRenderers[i].SetPosition(1, currentGrapplePositions[i]);
+                lineRenderer.SetPosition(0, gunTip.position);
+                lineRenderer.SetPosition(1, currentGrapplePositions);
             }
         }
     }
