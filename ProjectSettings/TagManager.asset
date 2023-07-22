@@ -11,11 +11,11 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - whatIsGround
+  - 
   - Water
   - UI
   - DontCollide
-  - 
+  - WhatIsGround
   - 
   - 
   - 
