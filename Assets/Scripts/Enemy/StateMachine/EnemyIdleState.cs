@@ -8,10 +8,9 @@ public class EnemyIdleState : EnemyBaseState
     {
         SwitchToRandomState(enemy);
     }
-
-    public override void OnCollisionEnter2D(Collision2D enemy)
+    public override void OnCollisionEnter(Collision collision)
     {
-
+        throw new System.NotImplementedException();
     }
 
     public override void UpdateState(EnemyStateManager enemy)

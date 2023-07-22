@@ -6,10 +6,11 @@ public class EnemyStateManager : MonoBehaviour
     private EnemyBaseState currentState;
     [SerializeField] private EnemyPatrolState patrolState;
     [SerializeField] private EnemyIdleState idleState;
+    [SerializeField] private EnemyAgroState agroState;
 
    private void Start()
     {
-        currentState = patrolState;
+        currentState = agroState;
         currentState.EnterState(this);
     }
 
@@ -24,9 +25,9 @@ public class EnemyStateManager : MonoBehaviour
         state.EnterState(this);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionEnter(Collision collision)
     {
-        currentState.OnCollisionEnter2D(collision);
+        currentState.OnCollisionEnter(collision);
     }
 
     private int GetRandomNumber(int maxNumber)
