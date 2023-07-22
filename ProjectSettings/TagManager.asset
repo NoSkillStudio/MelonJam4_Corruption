@@ -5,30 +5,32 @@ TagManager:
   serializedVersion: 2
   tags:
   - Ledge
+  - CameraHolder
+  - BulletSpawnPoint
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - whatIsGround
   - Water
   - UI
-  - whatIsPlayer
-  - 
-  - 
-  - whatIsWall
-  - whatIsGround
-  - whatIsLedge
-  - 
-  - 
-  - whatIsKnife
+  - DontCollide
   - 
   - 
   - 
   - 
   - 
-  - postProcessing
-  - dontRender
-  - bloom
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
   - 
   - 
   - 
