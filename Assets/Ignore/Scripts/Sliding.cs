@@ -2,16 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
-/// added if(pm.wallrunning) return;
-
 public class Sliding : MonoBehaviour
 {
     [Header("References")]
     public Transform orientation;
     public Transform playerObj;
     private Rigidbody rb;
-    private PlayerMovementAdvanced pm;
+    private PlayerMovement pm;
 
     [Header("Sliding")]
     public float maxSlideTime;
@@ -30,7 +27,7 @@ public class Sliding : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
-        pm = GetComponent<PlayerMovementAdvanced>();
+        pm = GetComponent<PlayerMovement>();
 
         startYScale = playerObj.localScale.y;
     }
@@ -55,8 +52,6 @@ public class Sliding : MonoBehaviour
 
     private void StartSlide()
     {
-        if (pm.wallrunning) return;
-
         pm.sliding = true;
 
         playerObj.localScale = new Vector3(playerObj.localScale.x, slideYScale, playerObj.localScale.z);
@@ -70,7 +65,7 @@ public class Sliding : MonoBehaviour
         Vector3 inputDirection = orientation.forward * verticalInput + orientation.right * horizontalInput;
 
         // sliding normal
-        if(!pm.OnSlope() || rb.velocity.y > -0.1f)
+        if (!pm.OnSlope() || rb.velocity.y > -0.1f)
         {
             rb.AddForce(inputDirection.normalized * slideForce, ForceMode.Force);
 
